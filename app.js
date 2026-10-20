@@ -2197,9 +2197,15 @@ const MISI_META = {
   minat:        { key: 'minat', badge: 'MISI 3 · TANGKI SEMANGAT', cls: 'm3', mascot: '🦉', judul: 'Isi tangki semangat Robo IPA!' }
 };
 const GAME_EMOJI = ['😞', '🙂', '😊', '😄', '🤩'];
-const MASCOT_LINES = [
-  'Keren! Robo IPA senang sekali~', 'Burung Hantu Pintar mengangguk setuju!', 'Profesor Energi tersenyum bangga!',
-  'Terus lanjutkan, Saintis Cilik!', 'Jawaban yang jujur, itu yang terbaik!'
+// Feedback setelah menjawab soal Likert (gaya belajar/minat) disesuaikan per tingkat jawaban,
+// bukan kalimat antusias acak untuk semua pilihan — supaya jawaban seperti "Jarang" tidak
+// mendapat reaksi seolah-olah itu capaian yang membanggakan.
+const MASCOT_LINES_BY_LEVEL = [
+  { emoji: '😶', text: 'Terima kasih sudah jujur, Saintis Cilik!' },
+  { emoji: '😐', text: 'Baik, dicatat ya.' },
+  { emoji: '🙂', text: 'Oke, Robo IPA mencatatnya!' },
+  { emoji: '😄', text: 'Keren, terus semangat belajar!' },
+  { emoji: '🤩', text: 'Luar biasa! Profesor Energi bangga sekali!' }
 ];
 
 function renderPublicForm(data, token) {
@@ -2313,8 +2319,9 @@ function jawabLikert(i) {
   const g = window._game;
   const soal = g.missions[g.mIdx].soal[g.qIdx];
   const opsi = soal.OpsiJSON[i];
+  const m = MASCOT_LINES_BY_LEVEL[i] || MASCOT_LINES_BY_LEVEL[2];
   document.getElementById('gameFeedback').innerHTML =
-    `<div class="game-feedback ok">${MASCOT_LINES[Math.floor(Math.random() * MASCOT_LINES.length)]}</div>`;
+    `<div class="game-feedback ok">${m.emoji} ${m.text}</div>`;
   _lanjutSoalGame(opsi.label);
 }
 
