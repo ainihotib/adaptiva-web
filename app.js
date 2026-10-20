@@ -1410,9 +1410,11 @@ function hapusCPTPNow(cptpId) {
   confirmDelete('hapusCPTP', cptpId, renderCPTPContent,
     'Hapus CP & TP ini beserta seluruh Tujuan Pembelajaran di dalamnya? Tindakan ini tidak bisa dibatalkan.');
 }
+let _cptpBankCache = null; // cache Bank CP-TP agar tidak fetch ulang ke backend saat memilih dari dropdown
 function tambahCPTPModal() {
   gsRun('getBankCPTP', ['Fase B'], res => {
     const bank = res.data || [];
+    _cptpBankCache = bank;
     const bankOptions = bank.map(b => `<option value="${b.ID}">${esc(b.TeksCP.substring(0,80))}...</option>`).join('');
     openModal('Tambah CP &amp; TP', `
       <div class="mb-3"><label class="form-label">Ambil dari Bank CP-TP IPAS (opsional)</label>
@@ -1428,12 +1430,10 @@ function tambahCPTPModal() {
 }
 function pilihDariBank(bankId) {
   if (!bankId) return;
-  gsRun('getBankCPTP', [document.getElementById('fFaseCPTP').value], res => {
-    const b = (res.data || []).find(x => x.ID === bankId);
-    if (!b) return;
-    document.getElementById('fTeksCP').value = b.TeksCP;
-    document.getElementById('tpListWrap').innerHTML = b.TPJson.map(t => `<input class="form-control mb-2 tp-input" value="${esc(t.teks)}">`).join('');
-  });
+  const b = (_cptpBankCache || []).find(x => x.ID === bankId);
+  if (!b) return;
+  document.getElementById('fTeksCP').value = b.TeksCP;
+  document.getElementById('tpListWrap').innerHTML = b.TPJson.map(t => `<input class="form-control mb-2 tp-input" value="${esc(t.teks)}">`).join('');
 }
 function tambahBarisTP() {
   const wrap = document.getElementById('tpListWrap');
