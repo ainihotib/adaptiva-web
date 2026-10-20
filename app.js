@@ -1346,10 +1346,7 @@ function renderKelompokContent() {
       const opsi = k.opsiDiferensiasi || [];
       const anggota = k.anggota.map(a => `<div class="d-flex justify-content-between align-items-center py-1 border-bottom">
         <span>${esc(a.Nama)} <small class="text-muted">(${esc(a.SkorKesiapan != null ? a.SkorKesiapan : 0)}/10)</small></span>
-        <select class="form-select form-select-sm" style="width:auto" onchange="pindahSiswaNow('${a.ID}','${k.ID}',this.value)">
-          <option value="">Pindah ke...</option>
-          ${list.filter(l => l.ID !== k.ID).map(l => `<option value="${l.ID}">${TIER_LABEL[l.NamaKelompok]}</option>`).join('')}
-        </select></div>`).join('');
+        </div>`).join('');
       const opsiHtml = opsi.map((o, oi) => `
         <div class="form-check">
           <input class="form-check-input" type="checkbox" id="opsi_${k.ID}_${oi}" ${o.checked ? 'checked' : ''}>
