@@ -54,6 +54,7 @@ body {
   background: var(--canvas);
   color: var(--text-primary);
   margin: 0;
+  overflow-x: hidden; /* dipindah dari .landing-screen agar tidak merusak position:sticky navbar */
 }
 h1,h2,h3,h4,h5,h6 { font-weight: 700; }
 a { text-decoration: none; }
@@ -348,7 +349,7 @@ textarea.form-control { height:auto; }
 @keyframes spin { to { transform: rotate(360deg); } }
 
 /* ══════════════════ HALAMAN MUKA / LOGIN (landing, gaya a2dstudio) ══════════════════ */
-.landing-screen { background: var(--canvas); min-height:100vh; overflow-x:hidden; }
+.landing-screen { background: var(--canvas); min-height:100vh; }
 
 .landing-nav {
   position: sticky; top:0; z-index: 500; background: rgba(255,255,255,.88); backdrop-filter: blur(10px);
