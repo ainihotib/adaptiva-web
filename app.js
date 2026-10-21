@@ -7,9 +7,14 @@
  * ============================================================
  */
 
-// GANTI dengan URL /exec deployment BARU (REST API) — bukan deployment SPA/HtmlService lama.
-// Deploy → New deployment → Web app → Execute as: Me → Who has access: Anyone.
-const GAS_URL = 'https://script.google.com/macros/s/AKfycbxxb9H0wB5WB41ArICBsv7tJEyn-xrMLDRLovpPaHCsgFzz7w2mnkVLBxBeYL43F7O2/exec';
+// Backend utama ADAPTIVA sekarang di Vercel (Node.js) — data tetap di Google Sheets yang sama,
+// login lewat Google OAuth. GAS_URL lama disimpan sebagai GAS_LEGACY_URL khusus untuk fitur
+// unduh Word/PDF Modul Ajar (eksporModulAjarKeDokumenPublic), yang tetap di Apps Script karena
+// memakai DocumentApp yang tidak ada di Node.
+const GAS_URL = 'https://adaptiva-vercel.vercel.app/api/rpc';
+const GAS_LEGACY_URL = 'https://script.google.com/macros/s/AKfycbxxb9H0wB5WB41ArICBsv7tJEyn-xrMLDRLovpPaHCsgFzz7w2mnkVLBxBeYL43F7O2/exec';
+// Client ID OAuth 2.0 Google untuk tombol "Login dengan Google" (lihat initGoogleSignIn()).
+const GOOGLE_OAUTH_CLIENT_ID = '62768273455-6o47bioni469rc6nin0542pegni9prga.apps.googleusercontent.com';
 
 const AppState = {
   profile: null,
@@ -125,29 +130,40 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 });
 
-// Dipanggil dari tombol "Login" pada form email/password di kartu login.
-function submitLogin() {
-  const emailEl = document.getElementById('loginEmail');
-  const passEl = document.getElementById('loginPassword');
-  const email = emailEl ? emailEl.value.trim() : '';
-  const password = passEl ? passEl.value : '';
+// Google Identity Services memanggil fungsi ini otomatis setelah pengguna memilih akun Google
+// di tombol "Sign in with Google" (lihat initGoogleSignIn() & markup tombol di index.html).
+function handleGoogleCredentialResponse(response) {
   hideLoginError();
-  if (!email || !password) { showLoginError('Email dan password wajib diisi.'); return; }
+  const btnWrap = document.getElementById('googleSignInBtn');
+  if (btnWrap) btnWrap.style.opacity = '0.6';
 
-  const btn = document.querySelector('.login-submit-btn');
-  if (btn) { btn.disabled = true; btn.dataset.originalHtml = btn.innerHTML; btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Memproses...'; }
-
-  gsRun('loginUser', [email, password], res => {
-    if (btn) { btn.disabled = false; btn.innerHTML = btn.dataset.originalHtml; }
+  gsRun('loginWithGoogle', [response.credential], res => {
+    if (btnWrap) btnWrap.style.opacity = '1';
     if (!res.success) { showLoginError(res.message); return; }
     AppState.sessionToken = res.data.sessionToken;
-    AppState.profile = res.data.profile;
+    AppState.profile = res.data.user || res.data.profile;
     try { sessionStorage.setItem('adaptiva_session', res.data.sessionToken); } catch (e) {}
     enterAppAfterLogin();
   }, err => {
-    if (btn) { btn.disabled = false; btn.innerHTML = btn.dataset.originalHtml; }
+    if (btnWrap) btnWrap.style.opacity = '1';
     showLoginError((err && err.message) || 'Terjadi kesalahan. Coba lagi.');
   });
+}
+
+// Memuat & merender tombol Google Sign-In di dalam kartu login. Dipanggil saat kartu login
+// ditampilkan (showLoginScreen) — library Google Identity Services (gsi/client) sudah dimuat
+// lewat <script> di index.html.
+function initGoogleSignIn() {
+  if (typeof google === 'undefined' || !google.accounts || !google.accounts.id) return;
+  google.accounts.id.initialize({
+    client_id: GOOGLE_OAUTH_CLIENT_ID,
+    callback: handleGoogleCredentialResponse
+  });
+  const el = document.getElementById('googleSignInBtn');
+  if (el) {
+    el.innerHTML = '';
+    google.accounts.id.renderButton(el, { theme: 'outline', size: 'large', width: 280, text: 'signin_with', locale: 'id' });
+  }
 }
 
 function showLoginError(msg) {
@@ -200,6 +216,7 @@ function showLoginScreen() {
   if (landing) landing.style.display = 'none';
   const login = document.getElementById('loginScreen');
   if (login) login.style.display = 'flex';
+  initGoogleSignIn();
 }
 
 // Dipanggil dari tautan "Kembali ke Halaman Beranda" pada kartu login.
@@ -239,22 +256,33 @@ function toggleAccordion(headEl) {
 // UTILITAS UMUM
 // ════════════════════════════════════════════════════════
 
-// Semua panggilan ke backend lewat satu dispatcher (api()) yang membawa sessionToken —
-// lihat penjelasan di Kode.gs bagian AUTENTIKASI & OTORISASI. Dulu lewat google.script.run
-// (hanya bisa dari dalam GAS HtmlService); sekarang lewat fetch() REST API ke GAS_URL,
-// supaya bisa dipanggil dari domain manapun (GitHub Pages).
+// Semua panggilan ke backend lewat satu dispatcher REST (fetch) ke GAS_URL (Vercel). Backend
+// Vercel sudah menjawab preflight OPTIONS dengan header CORS yang benar, jadi Content-Type
+// application/json aman dipakai di sini (beda dari versi GAS lama yang terpaksa pakai text/plain).
 function gsRun(fnName, args, onSuccess, onError) {
   if (DEMO_MODE) { gsRunDemo_(fnName, args, onSuccess); return; }
   const onOk = onSuccess || function(){};
   const onErr = onError || function(err){ showToast('Error', (err && err.message) || String(err), 'danger'); };
 
-  // Content-Type WAJIB text/plain (bukan application/json) — supaya browser tidak mengirim
-  // preflight request (OPTIONS) yang akan ditolak GAS (ContentService tidak bisa menjawab
-  // preflight dengan header CORS kustom). Lihat catatan di Kode.gs: buildJsonResponse_().
   fetch(GAS_URL, {
     method: 'POST',
-    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ fnName: fnName, argsArray: args || [], sessionToken: AppState.sessionToken || '' })
+  })
+    .then(res => res.json())
+    .then(res => onOk(res))
+    .catch(err => onErr(err));
+}
+
+// Khusus fitur yang TETAP di GAS lama (unduh Word/PDF Modul Ajar) — sistem sesi berbeda
+// dari backend Vercel, jadi dipanggil lewat email guru yang sedang login, bukan sessionToken.
+function gsRunLegacy(fnName, args, onSuccess, onError) {
+  const onOk = onSuccess || function(){};
+  const onErr = onError || function(err){ showToast('Error', (err && err.message) || String(err), 'danger'); };
+  fetch(GAS_LEGACY_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+    body: JSON.stringify({ fnName: fnName, argsArray: args || [] })
   })
     .then(res => res.json())
     .then(res => onOk(res))
@@ -1726,7 +1754,9 @@ function unduhModulAjar(modulId) {
   const btn = document.getElementById('btnUnduh-' + modulId);
   const originalHtml = btn ? btn.innerHTML : '';
   if (btn) { btn.disabled = true; btn.innerHTML = '<i class="spinner-border spinner-border-sm"></i> Membuat dokumen...'; }
-  gsRun('eksporModulAjarKeDokumen', [modulId], res => {
+  // Fitur ini TETAP di GAS lama (DocumentApp tidak ada di Node/Vercel) — dipanggil lewat
+  // gsRunLegacy() dengan email guru yang sedang login, lihat eksporModulAjarKeDokumenPublic di Kode.gs.
+  gsRunLegacy('eksporModulAjarKeDokumenPublic', [modulId, (AppState.profile && AppState.profile.Email) || ''], res => {
     if (res.success) {
       showToast('Berhasil', 'Dokumen berhasil dibuat.', 'success');
       renderModulList();
