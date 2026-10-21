@@ -12,7 +12,7 @@
 // unduh Word/PDF Modul Ajar (eksporModulAjarKeDokumenPublic), yang tetap di Apps Script karena
 // memakai DocumentApp yang tidak ada di Node.
 const GAS_URL = 'https://adaptiva-vercel.vercel.app/api/rpc';
-const GAS_LEGACY_URL = 'https://script.google.com/macros/s/AKfycbxxb9H0wB5WB41ArICBsv7tJEyn-xrMLDRLovpPaHCsgFzz7w2mnkVLBxBeYL43F7O2/exec';
+const GAS_LEGACY_URL = 'https://script.google.com/macros/s/AKfycbwT2qPQjm7YJVSAwwZ9IAJ_-emMXOgrQy-aaJDN0aSf3p-gqGNbCh6iyI7GckcQpdpI/exec';
 // Client ID OAuth 2.0 Google untuk tombol "Login dengan Google" (lihat initGoogleSignIn()).
 const GOOGLE_OAUTH_CLIENT_ID = '62768273455-6o47bioni469rc6nin0542pegni9prga.apps.googleusercontent.com';
 
