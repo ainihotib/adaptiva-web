@@ -990,8 +990,10 @@ function renderAsesmenList() {
               `<button class="btn btn-sm btn-adaptiva-secondary" onclick="lihatLinkPublik('${a.ID}')"><i class="bi bi-link-45deg"></i> Link Publik</button>`}
             <button class="btn btn-sm btn-adaptiva-ghost" onclick="lihatHasilAsesmen('${a.ID}')"><i class="bi bi-bar-chart"></i> Hasil</button>
             <button class="btn btn-sm btn-adaptiva-ghost" onclick="importExcelModal('${a.ID}')"><i class="bi bi-upload"></i> Impor Excel</button>
+            <button class="btn btn-sm text-danger" onclick="confirmDelete('hapusAsesmen','${a.ID}', loadAsesmenSection)"><i class="bi bi-trash"></i></button>
           </div>
         </div>
+        <div class="text-muted small mt-1">Dibuat: ${esc(a.Tanggal || '-')}</div>
       </div>`).join('');
     document.getElementById('asesmenContent').innerHTML = `
       <button class="btn btn-adaptiva-primary mb-3" onclick="buatAsesmenModal()"><i class="bi bi-plus-lg"></i> Buat Asesmen Baru</button>
@@ -1350,7 +1352,7 @@ function onKelasChangeKelompok() {
     const list = (res.data || []).filter(a => a.StatusAktif === 'Aktif');
     if (!AppState.asesmenId || !list.find(a => a.ID === AppState.asesmenId)) AppState.asesmenId = list.length ? list[0].ID : null;
     document.getElementById('kelompokAsesmenSelector').innerHTML = list.length
-      ? `<select class="form-select" style="max-width:280px" onchange="AppState.asesmenId=this.value; renderKelompokContent()">${list.map(a => `<option value="${a.ID}" ${a.ID === AppState.asesmenId ? 'selected' : ''}>${esc(a.Judul)}</option>`).join('')}</select>`
+      ? `<select class="form-select" style="max-width:280px" onchange="AppState.asesmenId=this.value; renderKelompokContent()">${list.map(a => `<option value="${a.ID}" ${a.ID === AppState.asesmenId ? 'selected' : ''}>${esc(a.Judul)} — ${esc(a.Tanggal || '')}</option>`).join('')}</select>`
       : `<span class="text-muted small">Belum ada asesmen aktif untuk kelas ini.</span>`;
     renderKelompokContent();
   });
@@ -1682,7 +1684,7 @@ function onGenKelasChange() {
   const kelasId = document.getElementById('genKelas').value;
   gsRun('getAsesmenByKelas', [kelasId], res => {
     const list = (res.data || []).filter(a => a.StatusAktif === 'Aktif');
-    document.getElementById('genAsesmen').innerHTML = list.map(a => `<option value="${a.ID}">${esc(a.Judul)}</option>`).join('') || '<option value="">Belum ada asesmen aktif</option>';
+    document.getElementById('genAsesmen').innerHTML = list.map(a => `<option value="${a.ID}">${esc(a.Judul)} — ${esc(a.Tanggal || '')}</option>`).join('') || '<option value="">Belum ada asesmen aktif</option>';
   });
   gsRun('getCPTPByKelas', [kelasId], res => {
     window.__genTPCPMap = {};
