@@ -1288,7 +1288,7 @@ function renderProfilSiswaContent() {
   showLoading('profilSiswaContent');
   gsRun('getSiswaByKelas', [AppState.kelasId], res => {
     const siswaList = res.data || [];
-    gsRun('getAllData', ['ProfilSiswa'], profilRes => {
+    gsRun('getAllProfilSiswa', [], profilRes => {
       const profilMap = {}; (profilRes.data || []).forEach(p => profilMap[p.SiswaID] = p);
       const tierByKategori = { 'Paham Utuh': 'Mahir', 'Paham Sebagian': 'Berkembang', 'Belum Paham': 'PerluPendampingan' };
       const rows = siswaList.map(s => {
@@ -1996,8 +1996,8 @@ function bukaEditorModul(modulId) {
   });
 }
 function renderValidatorSelect() {
-  gsRun('getAllData', ['Users'], res => {
-    const kepsekList = (res.data || []).filter(u => u.Peran === 'KepalaSekolah' && u.Status === 'Aktif');
+  gsRun('getDaftarValidator', [], res => {
+    const kepsekList = res.data || [];
     document.getElementById('validatorSelectWrap').innerHTML = kepsekList.length
       ? `<select class="form-select" id="fValidator">${kepsekList.map(u => `<option value="${u.Email}">${esc(u.Nama)} (${esc(u.Sekolah)})</option>`).join('')}</select>`
       : '<span class="text-danger small">Belum ada Kepala Sekolah/Pengawas terdaftar. Hubungi Admin.</span>';
@@ -2076,7 +2076,7 @@ function prosesValidasiNow(modulId, keputusan) {
 
 function loadBankReferensiSection() {
   showLoading('section-bankReferensi');
-  gsRun('getAllData', ['BankStrategiDiferensiasi'], res => {
+  gsRun('getBankStrategi', [], res => {
     const list = res.data || [];
     const rows = list.map(b => `<tr><td>${esc(b.Dimensi)}</td><td>${esc(b.TingkatKesiapan)}</td><td>${esc(b.Deskripsi)}</td>
       <td><button class="btn btn-sm text-danger" onclick="confirmDelete('hapusBankStrategi','${b.ID}', loadBankReferensiSection)"><i class="bi bi-trash"></i></button></td></tr>`).join('');
