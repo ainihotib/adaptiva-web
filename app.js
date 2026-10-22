@@ -2226,7 +2226,7 @@ const MISI_META = {
   gaya_belajar: { key: 'gaya_belajar', badge: 'MISI 2 · CARA BELAJARMU', cls: 'm2', mascot: '🤖', judul: 'Pilih aktivitas favoritmu di laboratorium.' },
   minat:        { key: 'minat', badge: 'MISI 3 · TANGKI SEMANGAT', cls: 'm3', mascot: '🦉', judul: 'Isi tangki semangat Robo IPA!' }
 };
-const GAME_EMOJI = ['😞', '🙂', '😊', '😄', '🤩'];
+const GAME_EMOJI = ['😞', '😐', '🙂', '😊', '🤩'];
 // Feedback setelah menjawab soal Likert (gaya belajar/minat) disesuaikan per tingkat jawaban,
 // bukan kalimat antusias acak untuk semua pilihan — supaya jawaban seperti "Jarang" tidak
 // mendapat reaksi seolah-olah itu capaian yang membanggakan.
